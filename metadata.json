@@ -1,0 +1,7 @@
+{
+  "name": "Ares Shield: Mars Habitat Thermal & Dust Simulator",
+  "description": "Interactive NASA Space Apps Mission Trainer simulating Martian thermal dynamics, solar dust accumulation, RTG power grids, and life support survival across 30 Sols.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARKZ MISSION: Mars Habitat Simulator</title>
+  <meta name="description" content="MARKZ MISSION: Mars Habitat Simulator - A fun, kid-friendly Mars Expedition & Base Builder for the NASA Space Apps Challenge! Design your base, survive cold nights and storms with Helper Noyel." />
+  <meta property="og:title" content="MARKZ MISSION: Mars Habitat Simulator" />
+  <meta property="og:description" content="MARKZ MISSION: Mars Habitat Simulator - A fun, kid-friendly Mars Expedition & Base Builder for the NASA Space Apps Challenge! Design your base, survive cold nights and storms with Helper Noyel." />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mars: {
+              rust: '#E05A47',
+              rustDark: '#B93826',
+              amber: '#F59E0B',
+              amberLight: '#FDE68A',
+              sand: '#D4A373',
+              sandLight: '#EED9C4',
+              dark: '#12090D',
+              surface: '#1E0E15',
+              card: '#24121A'
+            },
+            cosmic: {
+              950: '#10070B',
+              900: '#170B11',
+              850: '#200F17',
+              800: '#2A141F',
+              700: '#3D1D2C'
+            },
+            pastel: {
+              cyan: '#38bdf8',
+              coral: '#fb7185',
+              lavender: '#c084fc',
+              amber: '#fbbf24',
+              mint: '#34d399',
+              blue: '#60a5fa'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Fredoka"', '"Chakra Petch"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          borderRadius: {
+            '3xl': '1.75rem',
+            '4xl': '2.25rem'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Plus Jakarta Sans & Fredoka for friendly 12+ modern design -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background-color: #10070B;
+      color: #f1f5f9;
+      overflow: hidden;
+      user-select: none;
+    }
+    .font-display { font-family: 'Fredoka', cursive, sans-serif; }
+    .font-mono-data { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    
+    /* Gentle Starry Background */
+    .star-bg {
+      background-image: 
+        radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 140px 180px, #f59e0b, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 250px 70px, #e05a47, rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 320px 240px, #38bdf8, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 450px 120px, #ffffff, rgba(0,0,0,0));
+      background-repeat: repeat;
+      background-size: 500px 500px;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(23, 11, 17, 0.7); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb { background: rgba(224, 90, 71, 0.5); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(224, 90, 71, 0.8); }
+
+    /* Custom range sliders */
+    input[type=range] {
+      accent-color: #e05a47;
+    }
+
+    /* Floating Animations */
+    @keyframes noelFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(2deg); }
+    }
+    .animate-noel-float {
+      animation: noelFloat 3.5s ease-in-out infinite;
+    }
+
+    /* Mars Globe Rotation & Float */
+    @keyframes marsFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+      50% { transform: translateY(-12px) rotate(6deg) scale(1.02); }
+    }
+    .animate-mars-float {
+      animation: marsFloat 6s ease-in-out infinite;
+    }
+
+    @keyframes marsOrbitGlow {
+      0%, 100% { box-shadow: 0 0 45px rgba(224, 90, 71, 0.4), inset -18px -18px 40px rgba(0, 0, 0, 0.8); }
+      50% { box-shadow: 0 0 70px rgba(245, 158, 11, 0.55), inset -22px -22px 50px rgba(0, 0, 0, 0.85); }
+    }
+    .mars-glow-sphere {
+      animation: marsOrbitGlow 4s ease-in-out infinite;
+      background: radial-gradient(circle at 35% 35%, #fca5a5 0%, #e05a47 40%, #991b1b 75%, #450a0a 100%);
+    }
+
+    /* Pulsing Hint Badge */
+    @keyframes hintPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+      50% { transform: scale(1.08); box-shadow: 0 0 22px rgba(245, 158, 11, 0.9); }
+    }
+    .animate-hint-pulse {
+      animation: hintPulse 1.8s infinite;
+    }
+
+    /* Wrong Answer Shake Animation */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: shake 0.4s ease-in-out;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-cosmic-950 text-slate-100 select-none star-bg">
+
+  <!-- ======================================================== -->
+  <!-- 1. CLEAN MODERN HEADER (ZERO TECHNICAL BREADCRUMBS)      -->
+  <!-- ======================================================== -->
+  <header class="h-16 px-4 sm:px-6 flex items-center justify-between z-30 shrink-0 border-b border-mars-rust/20 bg-mars-dark/90 backdrop-blur-md">
+    <!-- Friendly Brand Logo & Title -->
+    <div class="flex items-center gap-3">
+      <div class="relative w-10 h-10 rounded-xl bg-mars-surface border border-mars-rust/40 p-0.5 flex items-center justify-center shadow-lg shadow-mars-rust/20 overflow-hidden">
+        <img src="logo.png" id="appLogo" alt="Markz Mission Logo" class="w-full h-full object-contain rounded-lg" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'45\' fill=\'%23E05A47\'/><text x=\'50\' y=\'62\' font-size=\'40\' text-anchor=\'middle\'>🚀</text></svg>';">
+      </div>
+      <div>
+        <h1 class="text-base sm:text-lg font-bold tracking-wide text-white font-display flex items-center gap-2">
+          MARKZ MISSION
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-mars-rust/20 text-mars-amber border border-mars-rust/40 font-sans hidden sm:inline-block">
+            MARS SIMULATOR
+          </span>
+        </h1>
+        <p class="text-[11px] text-slate-400 hidden md:block">
+          NASA Space Apps Challenge · Junior Astronaut Mission Trainer
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <button id="btn-header-home" title="Return to Home" class="hidden px-3.5 py-1.5 rounded-2xl bg-mars-surface hover:bg-mars-card border border-slate-700 hover:border-mars-rust/50 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5">
+        <span>🏠</span> <span class="hidden sm:inline">Home</span>
+      </button>
+
+      <button id="btn-open-settings" title="Audio & Sound Options" class="px-3 py-1.5 rounded-2xl bg-mars-surface hover:bg-mars-card border border-slate-700 hover:border-mars-rust/50 text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5">
+        <span>⚙️</span> <span class="hidden sm:inline">Audio</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 2. MAIN APPLICATION VIEWS CONTAINER                      -->
+  <!-- ======================================================== -->
+  <main class="flex-1 relative overflow-y-auto flex flex-col">
+
+    <!-- ======================================================== -->
+    <!-- VIEW 1: HOME SCREEN (TITLE & PLAY)                       -->
+    <!-- ======================================================== -->
+    <section id="view-landing" class="min-h-screen w-full flex flex-col justify-between items-center py-6 px-4 bg-transparent relative z-10">
+      
+      <!-- Continuous Background Floating Mars Visualizer -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-35 -z-10">
+        <div class="w-96 h-96 sm:w-[500px] sm:h-[500px] rounded-full mars-glow-sphere animate-mars-float blur-[1px]"></div>
+      </div>
+
+      <!-- Main Landing Content Container -->
+      <div class="w-full max-w-2xl flex flex-col items-center text-center my-auto">
+        
+        <!-- Top Hero Header Container: Mascot, Badges & Title Separated Cleanly -->
+        <div class="flex flex-col items-center justify-center space-y-3 mb-6 text-center">
+          <!-- 1. Rotating Mars Globe Sphere & Astronaut Mascot -->
+          <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full mars-glow-sphere animate-mars-float flex items-center justify-center shadow-2xl relative border-2 border-mars-amber/40 shrink-0">
+            <!-- Surface features styling -->
+            <div class="absolute w-5 h-2.5 rounded-full bg-red-900/60 top-4 left-6 blur-[0.5px]"></div>
+            <div class="absolute w-8 h-4 rounded-full bg-red-950/70 bottom-5 right-6 blur-[0.5px]"></div>
+            <div class="text-4xl sm:text-5xl drop-shadow-lg">🧑‍🚀</div>
+          </div>
+
+          <!-- 2. Distinct Cadet Mission Ready Badge -->
+          <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-md border border-white/20 tracking-wider">
+            <span class="w-2 h-2 rounded-full bg-emerald-200 animate-pulse"></span>
+            CADET MISSION READY
+          </div>
+
+          <!-- 3. Main Title & Child-Friendly Pitch -->
+          <div class="space-y-2 pt-1 text-center">
+            <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-mars-rust/20 border border-mars-rust/40 text-mars-amberLight text-xs font-bold">
+              <span>🪐 NASA JUNIOR ASTRONAUT MISSION</span>
+            </div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-white font-display tracking-tight leading-tight">
+              MARKZ MISSION<br>
+              <span class="bg-gradient-to-r from-amber-400 via-rose-400 to-sky-300 bg-clip-text text-transparent">
+                Mars Habitat Simulator
+              </span>
+            </h2>
+            <p class="text-slate-200 text-sm max-w-lg mx-auto leading-relaxed pt-1">
+              Build your Mars base, balance power &amp; heaters for freezing -85°C nights, and survive red dust storms!
+            </p>
+          </div>
+        </div>
+
+        <!-- 2 Big Action Buttons -->
+        <div class="space-y-3 w-full max-w-md mx-auto mb-6">
+          <button id="btn-start-play" class="w-full py-3.5 px-6 bg-gradient-to-r from-mars-rust via-amber-500 to-rose-500 hover:from-rose-500 hover:to-amber-500 text-white font-display font-bold text-base sm:text-lg rounded-2xl shadow-xl shadow-mars-rust/30 hover:scale-[1.02] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-3">
+            <span>🚀 PLAY MISSION</span>
+            <span class="text-xs px-2.5 py-0.5 bg-white/25 rounded-full font-sans font-semibold">Start</span>
+          </button>
+
+          <button id="btn-landing-settings" class="w-full py-2.5 px-6 bg-mars-surface hover:bg-mars-card border border-slate-700/80 hover:border-mars-rust/60 text-slate-200 hover:text-white font-bold text-sm rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md">
+            <span>⚙️ AUDIO SETTINGS</span>
+          </button>
+        </div>
+
+        <!-- 3 Feature Highlights (Clean & Child-Friendly) -->
+        <div class="grid grid-cols-3 gap-3 pt-4 border-t border-mars-rust/20 w-full max-w-lg mx-auto text-xs text-slate-300">
+          <div class="p-3 rounded-2xl bg-mars-surface/80 border border-slate-800 text-center">
+            <span class="text-xl block mb-1">🏠</span>
+            <strong class="text-white block font-display text-xs">Pick Your Base</strong>
+            <span class="text-[11px] text-slate-400">Pods, Tent, or Dirt</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-mars-surface/80 border border-slate-800 text-center">
+            <span class="text-xl block mb-1">⚡</span>
+            <strong class="text-white block font-display text-xs">Power &amp; Heat</strong>
+            <span class="text-[11px] text-slate-400">Sun &amp; Nuclear RTG</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-mars-surface/80 border border-slate-800 text-center">
+            <span class="text-xl block mb-1">🤖</span>
+            <strong class="text-white block font-display text-xs">Helper Noyel</strong>
+            <span class="text-[11px] text-slate-400">Quiz Hints &amp; Science</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Dedicated Developer Credit Footer at Very Bottom -->
+      <footer class="w-full text-center py-4 mt-auto">
+        <p class="text-sm text-amber-200/80 font-medium tracking-wide">
+          simulation made by <a href="https://github.com/Amante-de-Cristo" target="_blank" rel="noopener noreferrer" class="text-amber-400 underline hover:text-amber-300 font-bold transition-colors">GIFTLIN</a>
+        </p>
+      </footer>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 2: MISSION SETUP & ARCHITECTURE SELECTOR            -->
+    <!-- ======================================================== -->
+    <section id="view-setup" class="hidden w-full h-full flex flex-col p-4 sm:p-6 overflow-y-auto">
+      <div class="max-w-5xl w-full mx-auto space-y-6 my-auto">
+        <!-- Setup Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-sky-500/10 text-sky-300 text-xs font-bold border border-sky-400/30">
+              <span>🛠️ STEP 1: CHOOSE YOUR EXPEDITION</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white font-display mt-1">
+              Design Your Martian Habitat
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-400">
+              Balance rocket launch weight and budget, then pick your home on Mars!
+            </p>
+          </div>
+          <button id="btn-back-landing" class="self-start sm:self-auto px-4 py-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5">
+            <span>⬅</span> Back
+          </button>
+        </div>
+
+        <!-- Budget & Payload Mass Sliders (Clear color-coded gauges) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 1. Money Budget Slider -->
+          <div class="p-5 rounded-3xl bg-cosmic-900/90 border border-slate-800 space-y-3 shadow-lg">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <span>💰</span> Mission Budget
+              </span>
+              <span id="label-cfg-budget" class="text-base font-extrabold text-amber-300 font-mono-data">
+                $2.5 Billion
+              </span>
+            </div>
+            <input id="slider-cfg-budget" type="range" min="500" max="5000" step="100" value="2500" class="w-full h-2.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-400 font-mono-data">
+              <span>$500M (Tight)</span>
+              <span>$2.5B (Standard)</span>
+              <span>$5.0B (Plenty)</span>
+            </div>
+            <!-- Color-coded budget gauge -->
+            <div id="gauge-budget-status" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between font-bold">
+              <span>Status: Good Funding Reserve</span>
+              <span>🟢 SAFE</span>
+            </div>
+          </div>
+
+          <!-- 2. Rocket Payload Mass Limit -->
+          <div class="p-5 rounded-3xl bg-cosmic-900/90 border border-slate-800 space-y-3 shadow-lg">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <span>⚖️</span> Rocket Cargo Limit
+              </span>
+              <span id="label-cfg-mass" class="text-base font-extrabold text-sky-300 font-mono-data">
+                50.0 Tons
+              </span>
+            </div>
+            <input id="slider-cfg-mass" type="range" min="15" max="100" step="5" value="50" class="w-full h-2.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-400 font-mono-data">
+              <span>15 Tons (Small Rocket)</span>
+              <span>50 Tons (Heavy Rocket)</span>
+              <span>100 Tons (Mega Cargo)</span>
+            </div>
+            <!-- Color-coded mass gauge -->
+            <div id="gauge-mass-status" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between font-bold">
+              <span>Status: Fits inside rocket fairing</span>
+              <span>🟢 SAFE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 ARCHITECTURE CARDS -->
+        <div class="space-y-3">
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+            Choose Base Style:
+          </span>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Card 1: Metal Pods -->
+            <div id="card-arch-metallic" data-arch="metallic" class="setup-arch-card p-5 rounded-3xl bg-cosmic-900 border-2 border-slate-800 hover:border-mars-rust/60 transition-all cursor-pointer flex flex-col justify-between space-y-4 shadow-md">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-3xl">🚀</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-bold">
+                    HERITAGE
+                  </span>
+                </div>
+                <h3 class="text-lg font-bold text-white font-display">
+                  Metal Pods
+                </h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Classic strong aluminum modules like space cans! Very sturdy and ready to use immediately.
+                </p>
+                <div class="pt-2 grid grid-cols-2 gap-2 text-xs font-mono-data text-slate-300">
+                  <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="text-slate-500 block text-[10px]">COST</span>
+                    <strong class="text-amber-300">$800M</strong>
+                  </div>
+                  <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="text-slate-500 block text-[10px]">MASS</span>
+                    <strong class="text-rose-400">55.0 Tons</strong>
+                  </div>
+                </div>
+              </div>
+              <button class="btn-pick-arch w-full py-2.5 rounded-2xl bg-slate-800 hover:bg-mars-rust text-white font-bold text-xs font-display transition-colors">
+                Select Metal Pods
+              </button>
+            </div>
+
+            <!-- Card 2: Inflatable Tent (Default) -->
+            <div id="card-arch-inflatable" data-arch="inflatable" class="setup-arch-card p-5 rounded-3xl bg-cosmic-900 border-2 border-mars-amber shadow-xl shadow-mars-amber/15 transition-all cursor-pointer flex flex-col justify-between space-y-4">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-3xl">⛺</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold">
+                    RECOMMENDED
+                  </span>
+                </div>
+                <h3 class="text-lg font-bold text-white font-display">
+                  Inflatable Tent
+                </h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Lightweight dome tent with aerogel thermal blankets. Very roomy for your crew and easy to launch!
+                </p>
+                <div class="pt-2 grid grid-cols-2 gap-2 text-xs font-mono-data text-slate-300">
+                  <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="text-slate-500 block text-[10px]">COST</span>
+                    <strong class="text-amber-300">$1.40B</strong>
+                  </div>
+                  <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="text-slate-500 block text-[10px]">MASS</span>
+                    <strong class="text-emerald-400">25.0 Tons</strong>
+                  </div>
+                </div>
+              </div>
+              <button class="btn-pick-arch w-full py-2.5 rounded-2xl bg-mars-rust text-white font-bold text-xs font-display transition-colors shadow">
+                ✓ Selected Tent
+              </button>
+            </div>
+
+            <!-- Card 3: 3D Mars Dirt House -->
+            <div id="card-arch-regolith" data-arch="regolith" class="setup-arch-card p-5 rounded-3xl bg-cosmic-900 border-2 border-slate-800 hover:border-mars-rust/60 transition-all cursor-pointer flex flex-col justify-between space-y-4 shadow-md">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-3xl">🧱</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-mars-rust/20 text-rose-300 border border-rose-400/30 font-bold">
+                    MAX ARMOR
+                  </span>
+                </div>
+                <h3 class="text-lg font-bold text-white font-display">
+                  3D Mars Dirt House
+                </h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Built by robot rovers out of melted Mars dirt! 100% safe from freezing night cold and solar storms.
+                </p>
+                <div class="pt-2 grid grid-cols-2 gap-2 text-xs font-mono-data text-slate-300">
+                  <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="text-slate-500 block text-[10px]">COST</span>
+                    <strong class="text-amber-300">$2.40B</strong>
+                  </div>
+                  <div class="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="text-slate-500 block text-[10px]">MASS</span>
+                    <strong class="text-emerald-400">15.0 Tons</strong>
+                  </div>
+                </div>
+              </div>
+              <button class="btn-pick-arch w-full py-2.5 rounded-2xl bg-slate-800 hover:bg-mars-rust text-white font-bold text-xs font-display transition-colors">
+                Select 3D Dirt House
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Launch Button Bar -->
+        <div class="p-4 rounded-3xl bg-cosmic-900/90 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-xs text-slate-300 font-mono-data">
+            <span class="text-slate-500 block text-[10px]">EXPEDITION GOAL:</span>
+            <span class="text-sky-300 font-bold text-sm">SURVIVE 30 SOLS (MISSION DURATION)</span>
+          </div>
+
+          <button id="btn-launch-simulation" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white font-display font-bold text-sm shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2">
+            <span>🚀 LAUNCH SIMULATION CONTROL ROOM</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 3: SIMULATION CONTROL ROOM                          -->
+    <!-- ======================================================== -->
+    <section id="view-sim" class="hidden w-full h-full flex flex-col overflow-hidden">
+      
+      <!-- Top Simulation HUD Banner (Friendly & Clear) -->
+      <div class="h-16 px-4 sm:px-6 bg-cosmic-900/90 border-b border-slate-800 flex items-center justify-between shrink-0 z-20">
+        <!-- Sol Day Counter -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="px-3.5 py-1.5 rounded-2xl bg-slate-950 border border-sky-500/30 flex items-center gap-2 shadow-inner">
+            <span id="sim-hud-day-icon" class="text-base">☀️</span>
+            <div>
+              <span id="sim-hud-sol" class="text-sm sm:text-base font-extrabold text-sky-300 font-display">
+                SOL 01 / 30
+              </span>
+              <span id="sim-hud-lmst" class="text-xs text-amber-300 font-mono-data ml-1">
+                10:00 LMST
+              </span>
+            </div>
+          </div>
+
+          <span id="sim-season-badge" class="hidden md:inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/80 text-slate-300 text-xs font-mono-data">
+            <span>🍂</span> <span id="sim-season-label">Autumn Dust Season</span>
+          </span>
+        </div>
+
+        <!-- 3 Primary Status Pill Badges -->
+        <div class="flex items-center gap-2 sm:gap-3 font-mono-data text-xs">
+          <!-- Dome Temp -->
+          <div id="badge-temp" class="px-3 py-1.5 rounded-2xl bg-sky-950/80 border border-sky-400/40 text-sky-200 font-bold flex items-center gap-1.5 shadow">
+            <span>🌡️</span> <span id="val-dome-temp">+20.0°C</span>
+          </div>
+
+          <!-- Battery Power -->
+          <div id="badge-battery" class="px-3 py-1.5 rounded-2xl bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-bold flex items-center gap-1.5 shadow">
+            <span>🔋</span> <span id="val-battery">300 / 300 kWh</span>
+          </div>
+
+          <!-- Crew Health -->
+          <div id="badge-health" class="px-3 py-1.5 rounded-2xl bg-rose-950/80 border border-rose-400/40 text-rose-300 font-bold flex items-center gap-1.5 shadow">
+            <span>❤️</span> <span id="val-health">100% HEALTH</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Mars Atmosphere Viewport (Dynamic Canvas) -->
+      <div class="flex-1 relative bg-slate-950 overflow-hidden">
+        <canvas id="sim-canvas" class="w-full h-full block"></canvas>
+
+        <!-- Top-Left Floating Info Badges on Viewport -->
+        <div class="absolute top-4 left-4 flex flex-wrap gap-2 pointer-events-none font-mono-data text-xs">
+          <div class="px-3 py-1 rounded-2xl bg-cosmic-900/85 border border-sky-400/30 text-sky-300 backdrop-blur shadow">
+            <span>BASE: </span>
+            <strong id="sim-viewport-arch" class="text-white">INFLATABLE DOME</strong>
+          </div>
+          <div class="px-3 py-1 rounded-2xl bg-cosmic-900/85 border border-amber-400/30 text-amber-300 backdrop-blur shadow">
+            <span>OUTSIDE AIR: </span>
+            <strong id="sim-viewport-ambient" class="text-cyan-300">-25.0°C</strong>
+          </div>
+          <div class="px-3 py-1 rounded-2xl bg-cosmic-900/85 border border-purple-400/30 text-purple-300 backdrop-blur shadow">
+            <span>SOLAR POWER: </span>
+            <strong id="sim-viewport-solar" class="text-amber-300">45 kW (Day)</strong>
+          </div>
+        </div>
+
+        <!-- Viewport Top Badges -->
+      </div>
+
+      <!-- Bottom Simulation Controls Bar (Speed Slider & Execution Triggers) -->
+      <div class="p-3 sm:p-4 bg-cosmic-900/95 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 z-20">
+        <!-- Interactive Speed Slider & Pause Toggle (Smooth horizontal control) -->
+        <div class="w-full md:w-auto flex items-center gap-3 bg-slate-950/80 px-4 py-2 rounded-2xl border border-slate-800">
+          <button id="btn-toggle-pause" class="px-3 sm:px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-xs font-bold text-slate-200 border border-slate-700 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow" title="Pause or Resume Simulation">
+            <span id="icon-toggle-pause">⏸️</span>
+            <span id="text-toggle-pause" class="font-display">PAUSE SIMULATION</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Speed:</span>
+            <input id="slider-sim-speed" type="range" min="0.2" max="2.0" step="0.1" value="0.5" class="w-32 sm:w-44 h-2 bg-slate-800 rounded-lg cursor-pointer">
+            <span id="label-sim-speed" class="text-xs font-bold text-sky-300 font-mono-data w-28 text-right">
+              0.5 Sol/s (Relaxed)
+            </span>
+          </div>
+        </div>
+
+        <!-- 2 Execution Triggers -->
+        <div class="w-full md:w-auto flex items-center gap-2">
+          <!-- 1. Run Live Simulation -->
+          <button id="btn-run-live" class="flex-1 md:flex-none px-5 py-2.5 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-display font-bold text-xs sm:text-sm shadow-lg shadow-sky-500/20 transition-all cursor-pointer flex items-center justify-center gap-2">
+            <span>▶</span> Run Live Simulation
+          </button>
+
+          <!-- 2. Instant Fast-Forward -->
+          <button id="btn-fast-forward" class="flex-1 md:flex-none px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-display font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center gap-2">
+            <span>⚡</span> Instant Fast-Forward 30 Sols
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 4: END OF SIMULATION REPORT                         -->
+    <!-- ======================================================== -->
+    <section id="view-report" class="hidden w-full h-full flex flex-col p-4 sm:p-6 overflow-y-auto">
+      <div class="max-w-2xl w-full mx-auto space-y-6 my-auto text-center">
+        <!-- Grade Banner -->
+        <div class="space-y-2">
+          <div id="report-grade-icon" class="text-6xl animate-bounce">
+            🏆
+          </div>
+          <div id="report-grade-badge" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-display font-bold text-sm">
+            MASTER MARS ARCHITECT
+          </div>
+          <h2 id="report-title" class="text-3xl sm:text-4xl font-extrabold text-white font-display">
+            Mission Accomplished!
+          </h2>
+          <p id="report-subtitle" class="text-slate-300 text-sm max-w-md mx-auto">
+            You navigated extreme subzero cold, kept your crew safe, and answered planetary challenges!
+          </p>
+        </div>
+
+        <!-- 3 Performance Metric Cards -->
+        <div class="grid grid-cols-3 gap-3 font-mono-data text-xs">
+          <div class="p-4 rounded-3xl bg-cosmic-900/90 border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">TIME SURVIVED</span>
+            <span id="rep-sols" class="text-2xl font-extrabold text-sky-300 font-display">30 Sols</span>
+            <span class="text-slate-400 block text-[10px] mt-1">Full Mission</span>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-cosmic-900/90 border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">CREW HEALTH</span>
+            <span id="rep-health" class="text-2xl font-extrabold text-rose-300 font-display">96%</span>
+            <span class="text-emerald-400 block text-[10px] mt-1">Safe &amp; Sound</span>
+          </div>
+
+          <div class="p-4 rounded-3xl bg-cosmic-900/90 border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">ENGINEERING ACCURACY</span>
+            <span id="rep-quizzes" class="text-2xl font-extrabold text-amber-300 font-display">100%</span>
+            <span id="rep-quizzes-sub" class="text-amber-400 block text-[10px] mt-1">Junior Astronaut</span>
+          </div>
+        </div>
+
+        <!-- Post-Mortem Friendly Breakdown -->
+        <div class="p-5 rounded-3xl bg-cosmic-900/90 border border-slate-800 text-left space-y-2 text-xs">
+          <span class="text-xs font-bold text-amber-300 font-display uppercase tracking-wide block">
+            How Your Mars House Performed:
+          </span>
+          <p id="rep-analysis" class="text-slate-300 leading-relaxed">
+            Your habitat selection provided excellent thermal retention during the -85°C nights. RTG backup power kept life support online even when Martian dust storms reduced sunlight!
+          </p>
+        </div>
+
+        <!-- Restart Button -->
+        <div class="pt-2">
+          <button id="btn-report-restart" class="w-full sm:w-auto px-8 py-4 rounded-3xl bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 hover:from-sky-400 hover:to-rose-400 text-white font-display font-bold text-base shadow-xl shadow-sky-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2">
+            <span>🔄 TRY AGAIN (NEW EXPEDITION)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- DISASTER QUIZ MODAL (STRICT HARD-FREEZE & DYNAMIC QUESTIONS) -->
+  <!-- ======================================================== -->
+  <div id="modal-disaster-quiz" class="hidden absolute inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md">
+    <div class="max-w-xl w-full max-h-[85vh] sm:max-h-[88vh] overflow-y-auto bg-cosmic-900 border-2 border-rose-500/80 p-4 sm:p-5 rounded-3xl shadow-2xl space-y-3 font-mono-data">
+      <!-- Title & Icon -->
+      <div class="flex items-center gap-2.5">
+        <span id="quiz-icon" class="text-3xl animate-bounce">🌪️</span>
+        <div>
+          <span class="text-rose-400 text-[10px] font-bold uppercase tracking-widest block font-display">
+            🚨 EMERGENCY HAZARD · TIME PAUSED
+          </span>
+          <h3 id="quiz-title" class="text-lg sm:text-xl font-bold text-white font-display">
+            Martian Dust Storm Alert!
+          </h3>
+        </div>
+      </div>
+
+      <!-- 1-Minute Thinking Timer Bar -->
+      <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-amber-500/30 space-y-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="flex items-center gap-1.5 text-amber-300 font-bold font-display">
+            <span>⏱️</span> <span>Cadet Thinking Timer:</span>
+          </span>
+          <span id="quiz-timer-text" class="text-amber-300 font-bold font-mono-data px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-400/40 text-xs">
+            60s
+          </span>
+        </div>
+        <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+          <div id="quiz-timer-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-400 rounded-full transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Child-Friendly Situation Brief -->
+      <div class="p-2.5 sm:p-3 rounded-2xl bg-rose-950/50 border border-rose-500/40 text-xs text-slate-200 space-y-1">
+        <span class="text-rose-300 font-bold block text-[10px] font-display">WHAT HAPPENED:</span>
+        <p id="quiz-situation" class="leading-relaxed">
+          Red Martian dust is blowing across the solar panels, blocking out 90% of the sunlight!
+        </p>
+      </div>
+
+      <!-- Multiple-Choice Question -->
+      <div class="space-y-1.5">
+        <span id="quiz-question-prompt" class="text-xs text-white font-bold block">
+          How should Mission Control keep the base powered?
+        </span>
+        <div id="quiz-options-list" class="space-y-2">
+          <!-- Dynamically populated options -->
+        </div>
+      </div>
+
+      <!-- Instant Feedback Box -->
+      <div id="quiz-feedback-box" class="hidden p-3 rounded-2xl text-xs space-y-1">
+        <!-- Result explanation -->
+      </div>
+
+      <!-- Embedded Helper Noyel Quiz Chatbot Assistant -->
+      <div class="rounded-2xl bg-slate-950/70 border border-sky-400/30 p-2.5 sm:p-3 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xl animate-noel-float">🤖</span>
+            <div>
+              <span class="text-xs font-bold text-sky-300 font-display block">Helper Noyel</span>
+              <span class="text-[9px] text-emerald-400 font-bold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online Quiz Assistant
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button id="btn-quiz-noel-hint" type="button" class="px-2.5 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] font-display shadow cursor-pointer transition-transform active:scale-95 flex items-center gap-1">
+              <span>💡</span> <span>Ask Noyel Hint</span>
+            </button>
+            <button id="btn-quiz-explain-science" type="button" class="px-2.5 py-1 rounded-xl bg-indigo-500/30 hover:bg-indigo-500/50 border border-indigo-400/40 text-indigo-200 font-bold text-[11px] font-display shadow cursor-pointer transition-transform active:scale-95 flex items-center gap-1">
+              <span>🔬</span> <span>Science Fact</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Noyel Response Box inside Quiz -->
+        <div id="quiz-noel-hint-box" class="p-2.5 rounded-2xl bg-sky-950/50 border border-sky-500/30 text-slate-200 text-xs leading-relaxed space-y-1">
+          <span class="text-[10px] font-bold text-sky-400 block font-display">NOYEL SAYS:</span>
+          <p id="quiz-noel-hint-text">Cadet, take your time! The simulation is paused. Click "Ask Noyel Hint", "Show Answer", or ask me a question below!</p>
+        </div>
+
+        <!-- Embedded Interactive Chat Form with Easter Egg -->
+        <form id="quiz-noyel-chat-form" class="pt-1 flex gap-2">
+          <input id="quiz-noyel-input" type="text" placeholder="Ask Noyel anything or type 'How is life?'..." class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-400 focus:border-amber-400 outline-none">
+          <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-bold text-xs font-display shadow cursor-pointer transition-transform active:scale-95">
+            Ask
+          </button>
+        </form>
+      </div>
+
+      <!-- Action Footer with "Show Answer" and "Continue Expedition" -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800">
+        <button id="btn-quiz-show-answer" type="button" class="px-3.5 py-2 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs font-display shadow cursor-pointer transition-transform active:scale-95 flex items-center gap-1.5">
+          <span>🔍</span> <span>Show Answer</span>
+        </button>
+
+        <button id="btn-quiz-resume" type="button" class="hidden flex-1 sm:flex-none px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white font-display font-bold text-xs sm:text-sm cursor-pointer shadow-lg shadow-emerald-500/25 transition-transform active:scale-95 flex items-center justify-center gap-2">
+          <span>🚀</span> <span>CONTINUE EXPEDITION</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- AUDIO & SYSTEM SETTINGS MODAL                            -->
+  <!-- ======================================================== -->
+  <div id="modal-settings" class="hidden absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="max-w-md w-full bg-cosmic-900 border border-slate-700 p-6 rounded-4xl shadow-2xl space-y-5 font-mono-data text-xs">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white font-display">
+          ⚙️ Audio &amp; Sound Settings
+        </h3>
+        <button id="btn-close-settings" class="text-slate-400 hover:text-white text-lg cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Master Audio Toggle -->
+      <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-slate-800">
+        <div>
+          <span class="text-xs font-bold text-white block">Master Sound</span>
+          <span class="text-[11px] text-slate-400">Enable/disable all audio</span>
+        </div>
+        <button id="btn-toggle-master-sound" class="px-3.5 py-1.5 rounded-xl bg-sky-500 text-white font-bold cursor-pointer text-xs">
+          ON
+        </button>
+      </div>
+
+      <!-- Music Volume Slider -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between text-slate-300">
+          <span>Background Music Volume</span>
+          <span id="label-music-vol" class="text-sky-300 font-bold">50%</span>
+        </div>
+        <input id="slider-music-vol" type="range" min="0" max="100" value="50" class="w-full accent-sky-400 cursor-pointer">
+      </div>
+
+      <!-- SFX Volume Slider -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between text-slate-300">
+          <span>Sound Effects (SFX) Volume</span>
+          <span id="label-sfx-vol" class="text-sky-300 font-bold">80%</span>
+        </div>
+        <input id="slider-sfx-vol" type="range" min="0" max="100" value="80" class="w-full accent-sky-400 cursor-pointer">
+      </div>
+
+      <!-- Current Track Info -->
+      <div class="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+        <div class="flex justify-between text-slate-500 text-[10px]">
+          <span>ACTIVE MUSIC PLAYLIST:</span>
+          <span class="text-emerald-400 font-bold">CONTINUOUS LOOP</span>
+        </div>
+        <div id="settings-track-name" class="font-bold text-sky-300 truncate">
+          Track 1: bg_music1.mp3 (Martian Ambient)
+        </div>
+      </div>
+
+      <button id="btn-save-settings" class="w-full py-3 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-display font-bold text-sm cursor-pointer transition-colors">
+        SAVE &amp; CLOSE
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT GAME ENGINE                                   -->
+  <!-- ======================================================== -->
+  <script>
+    'use strict';
+
+    // =========================================================================
+    // 1. AUDIO PLAYLIST & SOUND SYNTHESIZER
+    // =========================================================================
+    class SoundEngine {
+      constructor() {
+        this.masterEnabled = true;
+        this.musicVolume = 0.5;
+        this.sfxVolume = 0.8;
+
+        this.playlist = [
+          { file: '/audio/bg_music1.mp3', name: 'Track 1: bg_music1.mp3 (Martian Ambient)' },
+          { file: '/audio/bg_music2.mp3', name: 'Track 2: bg_music2.mp3 (Expedition Synth)' }
+        ];
+        this.currentTrackIndex = 0;
+
+        this.musicAudio = new Audio(this.playlist[0].file);
+        this.musicAudio.onended = () => this.nextTrack();
+
+        this.sfxClick = new Audio('/audio/click.mp3');
+        this.sfxAlarm = new Audio('/audio/alarm.mp3');
+        this.sfxVictory = new Audio('/audio/victory.mp3');
+        this.sfxRover = new Audio('/audio/rover.mp3');
+        this.sfxWrong = new Audio('/audio/quiz_wrong.mp3');
+        this.sfxCorrect = new Audio('/audio/quiz_correct.mp3');
+
+        // Web Audio API Synthesizer Fallback
+        this.ctx = null;
+        this.synthMusicTimer = null;
+        this.synthOscs = [];
+        this.synthGain = null;
+      }
+
+      initCtx() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) this.ctx = new AudioContextClass();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+      }
+
+      nextTrack() {
+        this.currentTrackIndex = (this.currentTrackIndex + 1) % this.playlist.length;
+        this.playMusic();
+      }
+
+      playMusic() {
+        if (!this.masterEnabled) return;
+        this.initCtx();
+
+        const track = this.playlist[this.currentTrackIndex];
+        const el = document.getElementById('settings-track-name');
+        if (el) el.textContent = track.name;
+
+        this.musicAudio.pause();
+        this.musicAudio = new Audio(track.file);
+        this.musicAudio.volume = this.musicVolume;
+        this.musicAudio.onended = () => this.nextTrack();
+
+        const p = this.musicAudio.play();
+        if (p) p.catch(() => this.startSynthMusic());
+        else this.startSynthMusic();
+      }
+
+      stopMusic() {
+        if (this.musicAudio) this.musicAudio.pause();
+        this.stopSynthMusic();
+      }
+
+      startSynthMusic() {
+        if (!this.ctx || !this.masterEnabled) return;
+        this.stopSynthMusic();
+
+        this.synthGain = this.ctx.createGain();
+        this.synthGain.gain.setValueAtTime(0.04 * this.musicVolume, this.ctx.currentTime);
+        this.synthGain.connect(this.ctx.destination);
+
+        const chords = [
+          [261.63, 329.63, 392.00], // C major
+          [220.00, 261.63, 329.63], // A minor
+          [174.61, 220.00, 261.63], // F major
+          [196.00, 246.94, 293.66]  // G major
+        ];
+        let idx = 0;
+
+        const playChord = () => {
+          this.synthOscs.forEach(o => { try { o.stop(); o.disconnect(); } catch(e){} });
+          this.synthOscs = [];
+
+          const currentChord = chords[idx % chords.length];
+          idx++;
+
+          currentChord.forEach(freq => {
+            const osc = this.ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            osc.connect(this.synthGain);
+            osc.start();
+            this.synthOscs.push(osc);
+          });
+
+          this.synthMusicTimer = setTimeout(playChord, 3500);
+        };
+        playChord();
+      }
+
+      stopSynthMusic() {
+        if (this.synthMusicTimer) clearTimeout(this.synthMusicTimer);
+        this.synthOscs.forEach(o => { try { o.stop(); o.disconnect(); } catch(e){} });
+        this.synthOscs = [];
+      }
+
+      playClick() {
+        if (!this.masterEnabled || this.sfxVolume <= 0) return;
+        this.initCtx();
+        this.sfxClick.currentTime = 0;
+        this.sfxClick.volume = this.sfxVolume;
+        const p = this.sfxClick.play();
+        if (p) p.catch(() => this.synthBeep(1200, 0.05));
+        else this.synthBeep(1200, 0.05);
+      }
+
+      playAlarm() {
+        if (!this.masterEnabled || this.sfxVolume <= 0) return;
+        this.initCtx();
+        this.sfxAlarm.currentTime = 0;
+        this.sfxAlarm.volume = this.sfxVolume;
+        const p = this.sfxAlarm.play();
+        if (p) p.catch(() => this.synthBeep(880, 0.25, 'sawtooth'));
+        else this.synthBeep(880, 0.25, 'sawtooth');
+      }
+
+      playCorrect() {
+        if (!this.masterEnabled || this.sfxVolume <= 0) return;
+        this.initCtx();
+        try {
+          if (this.sfxCorrect) {
+            this.sfxCorrect.currentTime = 0;
+            this.sfxCorrect.volume = this.sfxVolume;
+            const p = this.sfxCorrect.play();
+            if (p) p.catch(() => this.synthChime());
+          } else {
+            this.synthChime();
+          }
+        } catch(e) {
+          this.synthChime();
+        }
+      }
+
+      playWrong() {
+        if (!this.masterEnabled || this.sfxVolume <= 0) return;
+        this.initCtx();
+        try {
+          if (this.sfxWrong) {
+            this.sfxWrong.currentTime = 0;
+            this.sfxWrong.volume = this.sfxVolume;
+            const p = this.sfxWrong.play();
+            if (p) p.catch(() => this.synthWrongBuzz());
+          } else {
+            this.synthWrongBuzz();
+          }
+        } catch(e) {
+          this.synthWrongBuzz();
+        }
+      }
+
+      synthWrongBuzz() {
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          const t = this.ctx.currentTime;
+          osc.frequency.setValueAtTime(240, t);
+          osc.frequency.linearRampToValueAtTime(140, t + 0.35);
+          g.gain.setValueAtTime(0.14 * this.sfxVolume, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          osc.connect(g);
+          g.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.35);
+        } catch(e) {}
+      }
+
+      synthChime() {
+        if (!this.ctx) return;
+        try {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            const t = this.ctx.currentTime + i * 0.08;
+            osc.frequency.setValueAtTime(freq, t);
+            g.gain.setValueAtTime(0.12 * this.sfxVolume, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+            osc.connect(g);
+            g.connect(this.ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.25);
+          });
+        } catch(e) {}
+      }
+
+      playVictory() {
+        if (!this.masterEnabled || this.sfxVolume <= 0) return;
+        this.initCtx();
+        this.sfxVictory.currentTime = 0;
+        this.sfxVictory.volume = this.sfxVolume;
+        const p = this.sfxVictory.play();
+        if (p) p.catch(() => this.playCorrect());
+      }
+
+      synthBeep(freq, dur, type = 'sine') {
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          g.gain.setValueAtTime(0.1 * this.sfxVolume, this.ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+          osc.connect(g);
+          g.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + dur);
+        } catch(e) {}
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // =========================================================================
+    // 2. MISSION CONFIG & HABITAT ARCHITECTURES
+    // =========================================================================
+    const ARCH_TYPES = {
+      metallic: {
+        id: 'metallic',
+        name: 'Metal Pods',
+        tag: 'Heritage Sturdy',
+        cost: 800, // Millions
+        mass: 55, // Tons
+        thermalK: 0.55,
+        radShield: 0.50,
+        desc: 'Classic aluminum alloy modules. Super sturdy and ready!'
+      },
+      inflatable: {
+        id: 'inflatable',
+        name: 'Inflatable Tent',
+        tag: 'Spacious & Light',
+        cost: 1400, // Millions
+        mass: 25, // Tons
+        thermalK: 0.28,
+        radShield: 0.20,
+        desc: 'Lightweight dome tent with aerogel blankets. Very roomy!'
+      },
+      regolith: {
+        id: 'regolith',
+        name: '3D Mars Dirt House',
+        tag: 'Mars Dirt Armor',
+        cost: 2400, // Millions
+        mass: 15, // Tons Earth transit
+        thermalK: 0.18,
+        radShield: 0.02,
+        desc: 'Melted Martian dirt walls. Complete armor against cold and storms!'
+      }
+    };
+
+    const missionConfig = {
+      budget: 2500, // Millions
+      massLimit: 50, // Tons
+      targetSols: 30,
+      selectedArch: 'inflatable'
+    };
+
+    const sim = {
+      sol: 1,
+      hour: 10.0,
+      speed: 0.5, // 0.2 to 2.0 sols/sec, default 0.5 (Slow & Relaxed)
+      isPaused: false,
+      active: false,
+
+      // Environmental
+      ambientTemp: -25.0,
+      tau: 0.65,
+      dustOnPanels: 0.06,
+
+      // Grid
+      pSolar: 45.0,
+      pRTG: 30.0,
+      pThermalNeeded: 12.0,
+      pEclss: 15.0,
+      battery: 300.0,
+      batteryMax: 300.0,
+
+      // Vitals
+      habTemp: 20.0,
+      crewHealth: 100.0,
+
+      // Quiz & Cooldown Management (Capped at 3 per 30-Sol mission, 30s-45s delay & buffer)
+      activeCrisis: null,
+      quizzesAttempted: 0,
+      quizzesCorrect: 0,
+      quizzesSolved: 0,
+      quizzesTotal: 0,
+      maxQuizzes: 3, // Strict limit: max 3 quizzes per mission
+      activeSeconds: 0,
+      nextQuizAllowedSecond: 35, // 30s-45s initial delay before 1st question
+      cooldownIntervalSeconds: 35, // 30s-45s buffer period between questions
+      pausedByNoyel: false,
+      isFastForwarded: false,
+      askedQuestionsIndices: [],
+      survivedSols: 0
+    };
+
+    // Global Quiz Counters for telemetry tracking
+    let quizzesAttempted = 0;
+    let quizzesCorrect = 0;
+
+    let simTickTimer = null;
+    let realSecondsInterval = null;
+
+    // =========================================================================
+    // 3. DYNAMIC RANDOMIZED DISASTER QUIZ POOL (FRESH 12+ QUESTIONS)
+    // =========================================================================
+    const CRISIS_TEMPLATES = [
+      {
+        id: 'dust_storm',
+        icon: '🌪️',
+        title: 'Martian Dust Storm Alert!',
+        situation: 'Thick red Martian dust is blowing high into the sky, cutting 90% of our sunlight! Solar panels are dropping from 45 kW to 5 kW.',
+        questions: [
+          {
+            prompt: 'Sunlight is blocked by dust! How do we keep our base heated through the night?',
+            correct: 'Turn on our 30 kW RTG nuclear generator and send mini cleaner rovers to wipe the panels.',
+            wrongs: [
+              {
+                text: 'Crank up the solar panel voltage to try and push electricity through the dust.',
+                reason: 'Solar cells need incoming light photons to generate electricity; boosting inverter settings in darkness generates zero watts.'
+              },
+              {
+                text: 'Turn off life support oxygen tanks to save electricity.',
+                reason: 'Astronauts need continuous ECLSS atmospheric recycling; shutting off oxygen risks immediate crew hypoxia.'
+              }
+            ],
+            hint: 'Nuclear RTG batteries use warm Plutonium pellets that work 24/7 without any sunshine!',
+            science: 'Plutonium-238 inside NASA RTG units decays naturally, creating electricity day and night regardless of dust storms!'
+          },
+          {
+            prompt: 'Dust is piling up quickly on top of our glass solar arrays! What should Mission Control do?',
+            correct: 'Activate autonomous robotic sweeper rovers to brush the glass clean.',
+            wrongs: [
+              {
+                text: 'Blast high-pressure water onto the glass panels to wash them.',
+                reason: 'Mars surface pressure is under 1% of Earth; liquid water would boil and sublimate into ice crystals instantly, gumming up the arrays.'
+              },
+              {
+                text: 'Disconnect all batteries until the storm passes in 3 weeks.',
+                reason: 'Disconnecting batteries leaves the habitat completely without heater power, causing inside temperatures to plunge below -30°C.'
+              }
+            ],
+            hint: 'Mars air is so thin and cold that liquid water would boil and freeze away instantly. Use robot brushes!',
+            science: 'In Mars near-vacuum (610 Pa), water instantly evaporates. Robot brushes and electrostatic wipers keep panels shiny!'
+          },
+          {
+            prompt: 'Martian dust particles carry static electrical charges from colliding winds. What prevents electrical short circuits?',
+            correct: 'Ground the habitat exterior hull to deep bedrock using conductive earthing stakes.',
+            wrongs: [
+              {
+                text: 'Wrap the outside of the base in plastic cling wrap.',
+                reason: 'Plastic is a dielectric insulator that accumulates friction charges and quickly shreds in 100 km/h Martian winds.'
+              },
+              {
+                text: 'Turn off all radios so static electricity has nowhere to go.',
+                reason: 'Static builds up directly on exterior metal frames through wind friction; cutting communications leaves the habitat isolated without stopping charge accumulation.'
+              }
+            ],
+            hint: 'Grounding lets extra static electricity safely flow harmlessly into the ground bedrock.',
+            science: 'Mars lacks moisture to discharge static naturally, making grounding rods crucial for habitat avionics safety!'
+          }
+        ]
+      },
+      {
+        id: 'polar_vortex',
+        icon: '❄️',
+        title: 'Mars Night Cold Warning!',
+        situation: 'Super cold winds from the Martian pole have dropped outside temperatures to a freezing -110°C!',
+        questions: [
+          {
+            prompt: 'Outside air is dropping to -110°C! How do we stop our habitat from freezing inside?',
+            correct: 'Deploy multi-layer aerogel insulation shutters and match thermal heater power to the cold.',
+            wrongs: [
+              {
+                text: 'Open the airlock slightly so cool air can cycle through.',
+                reason: 'Opening the airlock vents precious pressurized oxygen and floods the habitat with toxic -110°C carbon dioxide air.'
+              },
+              {
+                text: 'Vent out half the air inside so there is less air to heat.',
+                reason: 'Dropping habitat air pressure starves astronauts of oxygen and triggers severe decompression sickness.'
+              }
+            ],
+            hint: 'Aerogel is NASA ultra-light thermal insulation known as "frozen smoke." It blocks extreme cold without adding heavy weight!',
+            science: 'NASA aerogel has thousands of tiny micropores that trap air pockets, stopping thermal heat loss through the hull.'
+          },
+          {
+            prompt: 'Water pipes near the airlock are getting close to freezing! What is the safest engineering move?',
+            correct: 'Circulate warm water loops using thermal isotope heating coils.',
+            wrongs: [
+              {
+                text: 'Dump salt into the clean astronaut drinking water tank.',
+                reason: 'Excess salinity contaminates human drinking supplies and permanently damages reverse-osmosis filtration membranes.'
+              },
+              {
+                text: 'Turn off the water pump so the ice stays frozen in place.',
+                reason: 'Static freezing water expands by 9% in volume, rupturing structural plumbing joints and flooding the airlock.'
+              }
+            ],
+            hint: 'Moving warm water keeps pipes clear and prevents burst lines.',
+            science: 'Continuous water loop circulation prevents ice crystal formation, protecting ECLSS life support loops.'
+          },
+          {
+            prompt: 'Extreme subzero cold makes metal hulls brittle. How does habitat design prevent stress cracking?',
+            correct: 'Use flexible expansion joints and multi-layer carbon composite fabrics that flex in deep cold.',
+            wrongs: [
+              {
+                text: 'Weld the hull completely stiff with brittle cast iron.',
+                reason: 'Rigid cast iron experiences severe ductile-to-brittle transitions in subzero conditions and fractures under contraction stress.'
+              },
+              {
+                text: 'Turn off indoor pressure so the walls do not have to stretch.',
+                reason: 'Decompressing the base eliminates atmospheric containment, destroying the internal biosphere and life support.'
+              }
+            ],
+            hint: 'Flexible materials expand and contract comfortably without cracking when temperatures swing!',
+            science: 'Materials on Mars experience 100°C diurnal swings. Composites with low thermal expansion coefficients prevent fracture.'
+          }
+        ]
+      },
+      {
+        id: 'solar_flare',
+        icon: '⚡',
+        title: 'Solar Radiation Storm Alert!',
+        situation: 'A giant burst of solar radiation is heading straight toward Mars!',
+        questions: [
+          {
+            prompt: 'Dangerous solar radiation is hitting Mars! Where should the crew take shelter?',
+            correct: 'Move the crew into the central storm shelter surrounded by water tanks and thick regolith walls.',
+            wrongs: [
+              {
+                text: 'Go up to the glass cupola observatory to watch the auroras.',
+                reason: 'Glass windows offer almost zero shielding against ionizing proton flux, exposing the crew to lethal radiation levels.'
+              },
+              {
+                text: 'Step outside in spacesuits to try and absorb the particles.',
+                reason: 'Flexible spacesuit fabrics are optimized for pressure and mobility, not ionizing cosmic radiation attenuation.'
+              }
+            ],
+            hint: 'Water and dirt have lots of hydrogen atoms, which are awesome at stopping speeding protons!',
+            science: 'Light atomic nuclei like Hydrogen in water (H2O) absorb cosmic protons much better than heavy metals!'
+          },
+          {
+            prompt: 'Sensitive habitat computers are at risk from electrical static surges! How should we protect them?',
+            correct: 'Switch to redundant radiation-hardened backup processors and surge grounding grids.',
+            wrongs: [
+              {
+                text: 'Unplug all computers and navigate the habitat with paper maps.',
+                reason: 'Life support, thermal heaters, and airlock pressure are entirely automated; shutting down computers disables life support.'
+              },
+              {
+                text: 'Pour water on the electrical circuitry to cool it down.',
+                reason: 'Water on live high-voltage electronics triggers catastrophic short circuits, electrical fires, and complete system failure.'
+              }
+            ],
+            hint: 'NASA spacecraft use special radiation-hardened computer chips that resist bit-flips from protons.',
+            science: 'Radiation-hardened electronics use insulated silicon substrates to prevent single-event upsets (SEUs).'
+          },
+          {
+            prompt: 'Space agriculture crops in the hydroponics bay are sensitive to ionizing radiation. What should Cadets do?',
+            correct: 'Slide heavy water-jacket shielding blinds over the greenhouse domes.',
+            wrongs: [
+              {
+                text: 'Turn on maximum bright lights to outshine the radiation.',
+                reason: 'Visible spectrum photons cannot block or deflect energetic ionizing protons or gamma radiation.'
+              },
+              {
+                text: 'Harvest all crops immediately and eat them in one day.',
+                reason: 'Consuming all colony food at once destroys the renewable hydroponic ecosystem and causes severe crew distress.'
+              }
+            ],
+            hint: 'A dense jacket of water blocks cosmic rays while preserving plant genetics.',
+            science: 'Water is one of the most mass-efficient radiation shields available on planetary surface missions.'
+          }
+        ]
+      }
+    ];
+
+    let currentCrisisQuestion = null;
+    let quizTimerId = null;
+    let quizSecondsLeft = 60;
+
+    function startQuizTimer() {
+      stopQuizTimer();
+      quizSecondsLeft = 60;
+      const bar = document.getElementById('quiz-timer-bar');
+      const txt = document.getElementById('quiz-timer-text');
+      if (bar) bar.style.width = '100%';
+      if (txt) txt.textContent = '60s';
+
+      quizTimerId = setInterval(() => {
+        quizSecondsLeft--;
+        if (txt) txt.textContent = `${quizSecondsLeft}s`;
+        if (bar) bar.style.width = `${Math.max(0, (quizSecondsLeft / 60) * 100)}%`;
+
+        if (quizSecondsLeft <= 0) {
+          stopQuizTimer();
+          const noelText = document.getElementById('quiz-noel-hint-text');
+          if (noelText) {
+            noelText.textContent = "⏰ 60 seconds are up, Cadet! Don't worry at all—click 'Ask Noyel Hint', hit 'Show Answer', or ask Noyel in the chat below! You've got this!";
+          }
+          const btnShow = document.getElementById('btn-quiz-show-answer');
+          if (btnShow) {
+            btnShow.classList.add('ring-2', 'ring-amber-400', 'animate-pulse');
+          }
+        }
+      }, 1000);
+    }
+
+    function stopQuizTimer() {
+      if (quizTimerId) {
+        clearInterval(quizTimerId);
+        quizTimerId = null;
+      }
+      const btnShow = document.getElementById('btn-quiz-show-answer');
+      if (btnShow) {
+        btnShow.classList.remove('ring-2', 'ring-amber-400', 'animate-pulse');
+      }
+    }
+
+    function getRandomCrisis() {
+      const availableQuestions = [];
+      CRISIS_TEMPLATES.forEach((tmpl) => {
+        tmpl.questions.forEach((q) => {
+          const uniqueKey = `${tmpl.id}_${q.prompt}`;
+          if (!sim.askedQuestionsIndices.includes(uniqueKey)) {
+            availableQuestions.push({ template: tmpl, qData: q, key: uniqueKey });
+          }
+        });
+      });
+
+      if (availableQuestions.length === 0) {
+        sim.askedQuestionsIndices = [];
+        CRISIS_TEMPLATES.forEach((tmpl) => {
+          tmpl.questions.forEach((q) => {
+            availableQuestions.push({ template: tmpl, qData: q, key: `${tmpl.id}_${q.prompt}` });
+          });
+        });
+      }
+
+      const chosen = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+      sim.askedQuestionsIndices.push(chosen.key);
+
+      const template = chosen.template;
+      const qData = chosen.qData;
+
+      const rawWrongs = qData.wrongs || [];
+      const w0 = rawWrongs[0];
+      const w1 = rawWrongs[1];
+
+      const allOptions = [
+        {
+          text: qData.correct,
+          correct: true,
+          reason: null
+        },
+        {
+          text: typeof w0 === 'object' ? w0.text : w0,
+          correct: false,
+          reason: typeof w0 === 'object' ? w0.reason : 'This action fails to address the underlying physics of the hazard.'
+        },
+        {
+          text: typeof w1 === 'object' ? w1.text : w1,
+          correct: false,
+          reason: typeof w1 === 'object' ? w1.reason : 'This action severely exhausts vital habitat power reserves.'
+        }
+      ].sort(() => Math.random() - 0.5);
+
+      return {
+        id: template.id,
+        icon: template.icon,
+        title: template.title,
+        situation: template.situation,
+        prompt: qData.prompt,
+        options: allOptions,
+        hint: qData.hint,
+        science: qData.science
+      };
+    }
+
+    function handleShowAnswer() {
+      try {
+        sound.playClick();
+      } catch(e) {}
+      stopQuizTimer();
+
+      if (!currentCrisisQuestion) return;
+
+      const optList = document.getElementById('quiz-options-list');
+      const allBtns = optList ? optList.querySelectorAll('button') : [];
+      allBtns.forEach(b => {
+        b.disabled = true;
+        b.classList.remove('hover:bg-slate-750', 'hover:border-sky-400', 'cursor-pointer');
+        b.classList.add('cursor-default');
+        if (b.dataset.correct === 'true') {
+          b.className = 'w-full text-left p-2.5 sm:p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/80 text-emerald-200 text-xs flex items-start gap-2.5 shadow-md shadow-emerald-500/20';
+          const tag = b.querySelector('.opt-letter');
+          if (tag) tag.className = 'opt-letter px-2 py-0.5 rounded-xl bg-emerald-800 border border-emerald-500 font-bold text-emerald-200 text-[10px]';
+        }
+      });
+
+      const feedbackBox = document.getElementById('quiz-feedback-box');
+      if (feedbackBox) {
+        feedbackBox.className = 'p-3 rounded-2xl text-xs space-y-1.5 bg-sky-950/80 border border-sky-400/50 text-sky-200 block';
+        feedbackBox.innerHTML = `
+          <span class="text-sky-300 font-bold font-display text-sm block">💡 MISSION CONTROL GUIDANCE (CORRECT ANSWER)</span>
+          <p class="leading-relaxed"><strong class="text-white">Optimal Solution:</strong> ${currentCrisisQuestion.options.find(o => o.correct)?.text}</p>
+          <p class="leading-relaxed pt-1 text-slate-300">${currentCrisisQuestion.science}</p>
+          <span class="text-[10px] text-emerald-400 font-bold block pt-1">✓ No penalty applied! Knowledge saved to mission archives.</span>
+        `;
+      }
+
+      const noelText = document.getElementById('quiz-noel-hint-text');
+      if (noelText) {
+        noelText.textContent = `Here is the full engineering solution, Cadet! ${currentCrisisQuestion.science}`;
+      }
+
+      const resumeBtn = document.getElementById('btn-quiz-resume');
+      if (resumeBtn) {
+        resumeBtn.classList.remove('hidden');
+        resumeBtn.focus?.();
+      }
+    }
+
+    function handleOptionChoice(chosenOpt, chosenBtn, allOptBtns) {
+      try {
+        stopQuizTimer();
+
+        allOptBtns.forEach(b => {
+          b.disabled = true;
+          b.classList.remove('hover:bg-slate-750', 'hover:border-sky-400', 'cursor-pointer');
+          b.classList.add('cursor-default');
+        });
+
+        const feedbackBox = document.getElementById('quiz-feedback-box');
+        const resumeBtn = document.getElementById('btn-quiz-resume');
+        const noelText = document.getElementById('quiz-noel-hint-text');
+
+        // Track quiz attempts
+        quizzesAttempted += 1;
+        sim.quizzesAttempted = quizzesAttempted;
+        sim.quizzesTotal = quizzesAttempted;
+
+        if (chosenOpt.correct) {
+          try {
+            sound.playCorrect();
+          } catch(err) {
+            console.warn('Audio error handled:', err);
+          }
+          quizzesCorrect += 1;
+          sim.quizzesCorrect = quizzesCorrect;
+          sim.quizzesSolved = quizzesCorrect;
+
+          chosenBtn.className = 'w-full text-left p-2.5 sm:p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/80 text-emerald-200 text-xs flex items-start gap-2.5 shadow-md shadow-emerald-500/20';
+
+          if (feedbackBox) {
+            feedbackBox.className = 'p-3 rounded-2xl text-xs space-y-1.5 bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 block';
+            feedbackBox.innerHTML = `
+              <span class="text-emerald-300 font-bold font-display text-sm block">✓ AWESOME ENGINEERING!</span>
+              <p class="leading-relaxed">${currentCrisisQuestion.science}</p>
+              <span class="text-[10px] text-emerald-400 font-bold block pt-1">+100 Mission Knowledge Points! Habitat power and crew are safe.</span>
+            `;
+          }
+
+          if (noelText) {
+            noelText.textContent = `🎉 Fantastic engineering decision, Cadet! Helper Noyel is proud of you! ${currentCrisisQuestion.science}`;
+          }
+        } else {
+          // WRONG ANSWER EXECUTION LOGIC
+          try {
+            sound.playWrong();
+          } catch(err) {
+            console.warn('Audio error handled:', err);
+          }
+
+          // 1. Highlight chosen wrong option in soft red with a shake animation
+          chosenBtn.className = 'animate-shake w-full text-left p-2.5 sm:p-3 rounded-2xl border-2 border-rose-500 bg-rose-950/80 text-rose-200 text-xs flex items-start gap-2.5 shadow-md shadow-rose-500/20';
+
+          // Subtly outline the correct answer so cadet immediately learns
+          allOptBtns.forEach(b => {
+            if (b.dataset.correct === 'true') {
+              b.className = 'w-full text-left p-2.5 sm:p-3 rounded-2xl border-2 border-emerald-500/70 bg-emerald-950/40 text-emerald-300 text-xs flex items-start gap-2.5';
+              const tag = b.querySelector('.opt-letter');
+              if (tag) tag.className = 'opt-letter px-2 py-0.5 rounded-xl bg-emerald-900/80 border border-emerald-600 font-bold text-emerald-300 text-[10px]';
+            }
+          });
+
+          // 2. Display friendly, encouraging explanation from Helper Noyel explaining why that choice wasn't optimal
+          if (feedbackBox) {
+            feedbackBox.className = 'p-3 rounded-2xl text-xs space-y-1.5 bg-rose-950/80 border border-rose-500/50 text-rose-200 block';
+            feedbackBox.innerHTML = `
+              <span class="text-rose-300 font-bold font-display text-sm block">✕ NOT QUITE OPTIMAL!</span>
+              <p class="leading-relaxed"><strong class="text-rose-200">Why this wasn't optimal:</strong> ${chosenOpt.reason || currentCrisisQuestion.science}</p>
+              <span class="text-[10px] text-rose-300 font-bold block pt-1">Mild system strain: -10% Battery / -5% Crew Health.</span>
+            `;
+          }
+
+          if (noelText) {
+            noelText.textContent = `Don't worry Cadet! Helper Noyel is right here with you! Science is all about testing ideas! Remember: ${currentCrisisQuestion.hint} The optimal move was: "${currentCrisisQuestion.options.find(o => o.correct)?.text}".`;
+          }
+
+          // 3. Mild penalty
+          sim.battery = Math.max(0, sim.battery - 30);
+          sim.crewHealth = Math.max(15, sim.crewHealth - 5);
+        }
+
+        // 5. Reveal clear [ CONTINUE EXPEDITION ] button
+        if (resumeBtn) {
+          resumeBtn.classList.remove('hidden');
+          resumeBtn.focus?.();
+        }
+
+        updateSimHUD();
+      } catch(err) {
+        console.error('Quiz option choice error caught cleanly:', err);
+        const resumeBtn = document.getElementById('btn-quiz-resume');
+        if (resumeBtn) resumeBtn.classList.remove('hidden');
+      }
+    }
+
+    function triggerDisasterQuiz() {
+      try {
+        setSimPauseState(true);
+        currentCrisisQuestion = getRandomCrisis();
+        sim.activeCrisis = currentCrisisQuestion.id;
+        
+        try {
+          sound.playAlarm();
+        } catch(e) {}
+
+        document.getElementById('quiz-icon').textContent = currentCrisisQuestion.icon;
+        document.getElementById('quiz-title').textContent = currentCrisisQuestion.title;
+        document.getElementById('quiz-situation').textContent = currentCrisisQuestion.situation;
+        document.getElementById('quiz-question-prompt').textContent = currentCrisisQuestion.prompt;
+
+        document.getElementById('quiz-noel-hint-text').textContent = 'Cadet, take your time! The simulation is paused. Click "Ask Noyel Hint", "Show Answer", or ask me a question below!';
+
+        const optList = document.getElementById('quiz-options-list');
+        optList.innerHTML = '';
+
+        const feedbackBox = document.getElementById('quiz-feedback-box');
+        feedbackBox.className = 'hidden p-3 rounded-2xl text-xs space-y-1.5';
+        feedbackBox.innerHTML = '';
+
+        const resumeBtn = document.getElementById('btn-quiz-resume');
+        resumeBtn.classList.add('hidden');
+
+        const allOptionButtons = [];
+        currentCrisisQuestion.options.forEach((opt, idx) => {
+          const btn = document.createElement('button');
+          btn.dataset.correct = opt.correct ? 'true' : 'false';
+          btn.className = 'w-full text-left p-2.5 sm:p-3 rounded-2xl border border-slate-700 bg-slate-800/90 hover:bg-slate-750 hover:border-sky-400 text-slate-200 text-xs transition-colors cursor-pointer flex items-start gap-2.5';
+          btn.innerHTML = `<span class="opt-letter px-2 py-0.5 rounded-xl bg-slate-900 border border-slate-700 font-bold text-sky-400 text-[10px]">${String.fromCharCode(65 + idx)}</span> <span class="leading-relaxed flex-1">${opt.text}</span>`;
+          
+          btn.addEventListener('click', () => {
+            handleOptionChoice(opt, btn, allOptionButtons);
+          });
+
+          allOptionButtons.push(btn);
+          optList.appendChild(btn);
+        });
+
+        startQuizTimer();
+        document.getElementById('modal-disaster-quiz').classList.remove('hidden');
+      } catch (err) {
+        console.error('Error triggering disaster quiz:', err);
+        sim.activeCrisis = null;
+        setSimPauseState(false);
+      }
+    }
+
+    // =========================================================================
+    // 4. SIMULATION TICK & PHYSICS ENGINE
+    // =========================================================================
+    function advanceSimTick() {
+      if (!sim.active || sim.isPaused) return;
+
+      sim.hour += 1.0;
+      if (sim.hour >= 24.0) {
+        sim.hour = 0.0;
+        sim.sol += 1;
+        sim.survivedSols = sim.sol;
+
+        // Check if finished target duration
+        if (sim.sol > missionConfig.targetSols) {
+          endMission(true, `Hooray! Your base thrived across all ${missionConfig.targetSols} Sols on Mars!`);
+          return;
+        }
+      }
+
+      const arch = ARCH_TYPES[missionConfig.selectedArch];
+      const isDay = sim.hour >= 5.0 && sim.hour < 20.0;
+
+      // Diurnal Ambient Temperatures
+      let baseWarm = -20;
+      let baseCold = -85;
+      if (sim.activeCrisis === 'polar_vortex') {
+        baseCold = -110;
+        baseWarm = -50;
+      }
+
+      if (isDay) {
+        const sunAngle = Math.sin(((sim.hour - 5.0) / 15.0) * Math.PI);
+        sim.ambientTemp = baseWarm - (1 - sunAngle) * (baseWarm - baseCold) * 0.4;
+      } else {
+        const nightProgress = sim.hour >= 20.0 ? (sim.hour - 20.0) / 9.0 : (sim.hour + 4.0) / 9.0;
+        sim.ambientTemp = baseCold - Math.sin(nightProgress * Math.PI) * 8.0;
+      }
+
+      // Solar Output
+      sim.tau = sim.activeCrisis === 'dust_storm' ? 3.8 : 0.65;
+      if (isDay) {
+        const sunAngle = Math.sin(((sim.hour - 5.0) / 15.0) * Math.PI);
+        const opticalTrans = Math.exp(-sim.tau * 0.45);
+        const cleanFactor = Math.max(0.1, 1 - sim.dustOnPanels);
+        sim.pSolar = 55.0 * sunAngle * opticalTrans * cleanFactor;
+      } else {
+        sim.pSolar = 0.0;
+      }
+
+      // RTG 24/7 Baseline
+      sim.pRTG = 30.0;
+
+      // Heating Demand Q_heat = k * (20 - T_ambient)
+      sim.pThermalNeeded = Math.max(0, arch.thermalK * (20.0 - sim.ambientTemp));
+      sim.pEclss = 15.0; // Life support
+      const totalLoad = sim.pThermalNeeded + sim.pEclss;
+      const totalGen = sim.pSolar + sim.pRTG;
+      const netPower = totalGen - totalLoad;
+
+      // Battery storage
+      sim.battery += netPower * 0.5;
+      if (sim.battery > sim.batteryMax) sim.battery = sim.batteryMax;
+
+      if (sim.battery <= 0) {
+        sim.battery = 0;
+        sim.habTemp = Math.max(-30, sim.habTemp - 2.0);
+        sim.crewHealth = Math.max(0, sim.crewHealth - 4);
+      } else {
+        sim.habTemp = 20.0;
+        if (sim.crewHealth < 100) sim.crewHealth = Math.min(100, sim.crewHealth + 0.5);
+      }
+
+      // Panel dust accumulation
+      if (sim.activeCrisis === 'dust_storm') {
+        sim.dustOnPanels = Math.min(0.90, sim.dustOnPanels + 0.02);
+      } else {
+        sim.dustOnPanels = Math.min(0.70, sim.dustOnPanels + 0.002);
+      }
+
+      // Auto dust sweeping
+      if (sim.battery > 40 && sim.dustOnPanels > 0.25) {
+        sim.dustOnPanels = Math.max(0.05, sim.dustOnPanels - 0.08);
+        sim.battery -= 2;
+      }
+
+      // Disaster Quiz trigger is managed by startRealSecondsTracker ensuring:
+      // 1. Initial exploration delay of 75s (between 60s-90s)
+      // 2. Strict buffer cooldown of 75s (between 60s-90s) between questions
+      // 3. Strict cap of 3 total quizzes per 30-Sol mission
+
+      // Health failure check
+      if (sim.crewHealth <= 0) {
+        endMission(false, 'Habitat heaters ran out of power during an extreme cold night. Keep your batteries charged!');
+        return;
+      }
+
+      updateSimHUD();
+    }
+
+    function setSimPauseState(paused) {
+      sim.isPaused = paused;
+      const icon = document.getElementById('icon-toggle-pause');
+      const txt = document.getElementById('text-toggle-pause');
+      if (icon) icon.textContent = sim.isPaused ? '▶' : '⏸️';
+      if (txt) txt.textContent = sim.isPaused ? 'RESUME SIMULATION' : 'PAUSE SIMULATION';
+      if (!sim.isPaused) {
+        startSimLoop();
+        startRealSecondsTracker();
+      } else {
+        if (simTickTimer) clearInterval(simTickTimer);
+      }
+    }
+
+    function startRealSecondsTracker() {
+      if (realSecondsInterval) clearInterval(realSecondsInterval);
+      realSecondsInterval = setInterval(() => {
+        if (sim.active && !sim.isPaused && !sim.activeCrisis) {
+          sim.activeSeconds += 1;
+          // Check if crisis question should trigger
+          if (sim.quizzesTotal < sim.maxQuizzes && sim.activeSeconds >= sim.nextQuizAllowedSecond) {
+            triggerDisasterQuiz();
+          }
+        }
+      }, 1000);
+    }
+
+    function startSimLoop() {
+      if (simTickTimer) clearInterval(simTickTimer);
+      if (!sim.active || sim.isPaused) return;
+
+      // Pacing: 30 Sols in 5-10 minutes.
+      // At default speed = 0.5: 500ms per hour tick -> 1 Sol = 12s -> 30 Sols = 360s (6.0 minutes)
+      const baseMs = 250 / sim.speed;
+      simTickTimer = setInterval(advanceSimTick, Math.max(15, baseMs));
+    }
+
+    function runFastForward() {
+      sound.playClick();
+      sim.isFastForwarded = true;
+      const arch = ARCH_TYPES[missionConfig.selectedArch];
+
+      let success = true;
+      let reason = '';
+      let sols = missionConfig.targetSols;
+      let finalHealth = 100;
+
+      // Check mass limits
+      if (arch.mass > missionConfig.massLimit) {
+        success = false;
+        sols = Math.round(missionConfig.targetSols * 0.4);
+        finalHealth = 0;
+        reason = `Your habitat was too heavy (${arch.mass} Tons) for your rocket (${missionConfig.massLimit} Tons). Essential heating spare parts had to be left behind!`;
+      }
+      // Check budget
+      else if (arch.cost > missionConfig.budget) {
+        success = false;
+        sols = Math.round(missionConfig.targetSols * 0.6);
+        finalHealth = 25;
+        reason = `Mission costs ($${arch.cost}M) exceeded budget ($${missionConfig.budget}M). Solar backup generators were under-funded.`;
+      } else {
+        success = true;
+        sols = missionConfig.targetSols;
+        finalHealth = arch.id === 'regolith' ? 98 : arch.id === 'inflatable' ? 94 : 90;
+        reason = `Brilliant mission engineering! The ${arch.name} met rocket weight and budget constraints, keeping the crew warm at +20°C!`;
+      }
+
+      sim.survivedSols = sols;
+      sim.crewHealth = finalHealth;
+      endMission(success, reason);
+    }
+
+    function endMission(success, reason) {
+      sim.active = false;
+      if (simTickTimer) clearInterval(simTickTimer);
+      if (realSecondsInterval) clearInterval(realSecondsInterval);
+
+      if (success) sound.playVictory();
+      else sound.playAlarm();
+
+      document.getElementById('report-title').textContent = success ? 'Mission Accomplished!' : 'Expedition Concluded';
+      document.getElementById('report-title').className = success ? 'text-3xl sm:text-4xl font-extrabold text-emerald-300 font-display' : 'text-3xl sm:text-4xl font-extrabold text-rose-300 font-display';
+
+      document.getElementById('report-grade-icon').textContent = success ? '🏆' : '⚠️';
+      document.getElementById('report-grade-badge').textContent = success ? 'MASTER MARS ARCHITECT' : 'CADET MISSION DEBRIEF';
+      document.getElementById('report-grade-badge').className = success ? 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-display font-bold text-sm' : 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 font-display font-bold text-sm';
+
+      document.getElementById('rep-sols').textContent = `${sim.survivedSols} Sols`;
+      document.getElementById('rep-health').textContent = `${Math.round(sim.crewHealth)}%`;
+
+      const repSub = document.getElementById('rep-quizzes-sub');
+      if (quizzesAttempted > 0) {
+        const accuracy = Math.round((quizzesCorrect / quizzesAttempted) * 100);
+        document.getElementById('rep-quizzes').textContent = `${accuracy}%`;
+        if (repSub) {
+          repSub.textContent = `${quizzesCorrect} / ${quizzesAttempted} Solved (${accuracy}% Accuracy)`;
+        }
+        if (sim.isFastForwarded) {
+          reason = reason + ` (Fast-Forward note: Solved ${quizzesCorrect} / ${quizzesAttempted} quizzes with ${accuracy}% accuracy before fast-forwarding).`;
+        }
+      } else {
+        document.getElementById('rep-quizzes').textContent = '0%';
+        if (repSub) {
+          repSub.textContent = '0 / 0 Solved (Fast-Forwarded)';
+        }
+        if (sim.isFastForwarded) {
+          reason = reason + ' Mission was fast-forwarded without active problem-solving. No disaster quizzes were answered.';
+        }
+      }
+
+      document.getElementById('rep-analysis').textContent = reason;
+      showView('view-report');
+    }
+
+    // =========================================================================
+    // 5. MARS BASE CANVAS VISUALIZER
+    // =========================================================================
+    let canvas, ctx;
+    let canvasW = 800, canvasH = 500;
+    let timeAnim = 0;
+
+    function resizeCanvas() {
+      if (!canvas || !canvas.parentElement) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        canvasW = rect.width;
+        canvasH = rect.height;
+      }
+    }
+
+    function renderCanvas() {
+      if (!canvas || !ctx) return;
+      timeAnim += 0.03;
+
+      ctx.save();
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      ctx.clearRect(0, 0, canvasW, canvasH);
+
+      const isDay = sim.hour >= 5.0 && sim.hour < 20.0;
+
+      // 1. SKY GRADIENT (Friendly pastel-sky transitions)
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, canvasH);
+      if (sim.activeCrisis === 'dust_storm') {
+        skyGrad.addColorStop(0, '#592008');
+        skyGrad.addColorStop(0.6, '#9a3412');
+        skyGrad.addColorStop(1, '#c2410c');
+      } else if (sim.activeCrisis === 'polar_vortex') {
+        skyGrad.addColorStop(0, '#0c1a2e');
+        skyGrad.addColorStop(0.6, '#1e293b');
+        skyGrad.addColorStop(1, '#0284c7');
+      } else if (isDay) {
+        skyGrad.addColorStop(0, '#1e1b2e');
+        skyGrad.addColorStop(0.4, '#44180d');
+        skyGrad.addColorStop(0.8, '#853215');
+        skyGrad.addColorStop(1, '#c2410c');
+      } else {
+        skyGrad.addColorStop(0, '#030712');
+        skyGrad.addColorStop(0.7, '#0b1120');
+        skyGrad.addColorStop(1, '#172554');
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      // Night Stars
+      if (!isDay && sim.activeCrisis !== 'dust_storm') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        for (let i = 0; i < 25; i++) {
+          const sx = ((i * 97) % canvasW);
+          const sy = ((i * 51) % (canvasH * 0.45));
+          ctx.fillRect(sx, sy, 1.5, 1.5);
+        }
+      }
+
+      // 2. CELESTIAL ORB (Mars Sun or Phobos Moon)
+      const orbX = canvasW * 0.15 + (sim.hour / 24) * (canvasW * 0.7);
+      const orbY = canvasH * 0.22 + Math.sin((sim.hour / 24) * Math.PI) * (-canvasH * 0.12);
+      if (isDay && sim.activeCrisis !== 'dust_storm') {
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(254, 240, 138, 0.25)';
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 24, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (!isDay) {
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3. ROLLING RED MARTIAN DUNES
+      const horizonY = canvasH * 0.65;
+      ctx.fillStyle = '#3f1508';
+      ctx.beginPath();
+      ctx.moveTo(0, horizonY);
+      ctx.bezierCurveTo(canvasW * 0.3, horizonY - 18, canvasW * 0.6, horizonY + 20, canvasW, horizonY - 10);
+      ctx.lineTo(canvasW, canvasH);
+      ctx.lineTo(0, canvasH);
+      ctx.fill();
+
+      ctx.fillStyle = '#5c1d0b';
+      ctx.beginPath();
+      ctx.moveTo(0, horizonY + 20);
+      ctx.bezierCurveTo(canvasW * 0.35, horizonY + 8, canvasW * 0.7, horizonY + 32, canvasW, horizonY + 12);
+      ctx.lineTo(canvasW, canvasH);
+      ctx.lineTo(0, canvasH);
+      ctx.fill();
+
+      // 4. HABITAT RENDERING (BASED ON SELECTED ARCHITECTURE)
+      const habX = canvasW * 0.48;
+      const habY = horizonY + 35;
+      ctx.save();
+      ctx.translate(habX, habY);
+
+      const isWarm = sim.habTemp >= 15;
+
+      if (missionConfig.selectedArch === 'metallic') {
+        // Metallic Pods
+        ctx.fillStyle = '#334155';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.fillRect(-65, -35, 130, 45);
+        ctx.strokeRect(-65, -35, 130, 45);
+
+        // Cupola dome
+        ctx.fillStyle = isWarm ? '#38bdf8' : '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(0, -35, 20, Math.PI, 0);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing windows
+        ctx.fillStyle = isWarm ? '#fef08a' : '#93c5fd';
+        for (let w = -45; w <= 45; w += 30) {
+          ctx.beginPath();
+          ctx.arc(w, -12, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (missionConfig.selectedArch === 'inflatable') {
+        // Inflatable Aerogel Dome
+        const domeR = 55;
+        const grad = ctx.createRadialGradient(0, -domeR * 0.5, 4, 0, -domeR * 0.5, domeR);
+        if (isWarm) {
+          grad.addColorStop(0, 'rgba(186, 230, 253, 0.9)');
+          grad.addColorStop(0.7, 'rgba(56, 189, 248, 0.5)');
+          grad.addColorStop(1, 'rgba(2, 132, 199, 0.8)');
+        } else {
+          grad.addColorStop(0, 'rgba(224, 242, 254, 0.9)');
+          grad.addColorStop(1, 'rgba(147, 197, 253, 0.8)');
+        }
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, domeR, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = isWarm ? '#38bdf8' : '#e0f2fe';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Floor line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath();
+        ctx.moveTo(-45, -15);
+        ctx.lineTo(45, -15);
+        ctx.stroke();
+      } else {
+        // 3D-Printed Regolith Vault
+        ctx.fillStyle = '#78350f';
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 65, Math.PI, 0);
+        ctx.lineTo(45, 0);
+        ctx.arc(0, 0, 45, 0, Math.PI, true);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Airlock
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-20, -18, 40, 18);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(-12, -12, 24, 8);
+      }
+
+      // Friendly mini animated astronaut inside
+      const astroX = Math.sin(timeAnim * 1.5) * 20;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(astroX, -8, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#f59e0b'; // Gold Visor
+      ctx.fillRect(astroX - 2, -10, 4, 2);
+      ctx.fillStyle = '#e2e8f0'; // Suit
+      ctx.fillRect(astroX - 3, -5, 6, 6);
+
+      ctx.restore();
+
+      // 5. SOLAR ARRAYS WITH DUST ACCUMULATION (Right side)
+      const arrayX = canvasW * 0.78;
+      const arrayY = horizonY + 30;
+      ctx.save();
+      ctx.translate(arrayX, arrayY);
+      ctx.fillStyle = '#1e3a8a';
+      ctx.beginPath();
+      ctx.moveTo(-40, -18);
+      ctx.lineTo(40, -18);
+      ctx.lineTo(30, 0);
+      ctx.lineTo(-30, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Dust Overlay on Panel
+      if (sim.dustOnPanels > 0.05) {
+        ctx.fillStyle = `rgba(180, 83, 9, ${sim.dustOnPanels * 0.85})`;
+        ctx.fill();
+      }
+
+      // Mini Sweeper Bot Rover moving back and forth
+      const roverX = Math.sin(timeAnim * 2) * 25;
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(roverX - 6, -14, 12, 6);
+      ctx.restore();
+
+      // 6. RTG NUCLEAR CORE (Left side)
+      const rtgX = canvasW * 0.20;
+      const rtgY = horizonY + 35;
+      ctx.save();
+      ctx.translate(rtgX, rtgY);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(-12, -22, 24, 22);
+      // Glowing nuclear core
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(0, -11, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
+      requestAnimationFrame(renderCanvas);
+    }
+
+    // =========================================================================
+    // 6. HELPER NOYEL AI CADET ASSISTANT (QUIZ-EMBEDDED COPILOT)
+    // =========================================================================
+    const NOYEL_KNOWLEDGE = [
+      {
+        keywords: ['how is life', 'life'],
+        reply: 'Life is like an ocean! 🌊 Vast, wondrous, and full of deep mysteries, Cadet! But on Mars, life needs a cozy warm base, clean air, and good friends! 🚀'
+      },
+      {
+        keywords: ['cold', 'freezing', '-85', 'temperature', 'winter', 'polar', '-110', 'heat', 'heater'],
+        reply: 'Mars is freezing cold (-85°C every night!) because its air is 100 times thinner than Earth. Keep base heaters powered with your battery and RTG core to stay at +20°C inside!'
+      },
+      {
+        keywords: ['dust', 'storm', 'tau', 'sand', 'wind'],
+        reply: 'Martian dust storms blow red dust high into the sky and block 90% of sunlight! Mini cleaner rovers sweep the solar glass, and our nuclear RTG generator keeps power flowing 24/7!'
+      },
+      {
+        keywords: ['solar', 'sun', 'panel', 'panels', 'photovoltaic'],
+        reply: 'Solar panels turn Martian sunshine into clean electricity for our battery. When red dust piles up, cleaner rovers brush them so they keep making power!'
+      },
+      {
+        keywords: ['rtg', 'nuclear', 'power', 'plutonium', 'battery'],
+        reply: 'RTG stands for Radioisotope Thermoelectric Generator! It uses warm Plutonium pellets to make 30 kW of steady electricity day and night, even inside huge dust storms!'
+      },
+      {
+        keywords: ['tent', 'inflatable', 'dome'],
+        reply: 'The Inflatable Tent packs flat inside the rocket and inflates into a huge, comfortable room on Mars. Its aerogel thermal blankets keep the cold outside!'
+      },
+      {
+        keywords: ['pods', 'metal', 'metallic', 'module'],
+        reply: 'Metal Pods are made of tough aerospace aluminum, just like modules on the Space Station. They are heavy to fly, but super strong!'
+      },
+      {
+        keywords: ['dirt', 'regolith', '3d', 'house', 'vault'],
+        reply: 'The 3D Mars Dirt House is built by rovers melting Martian sand into thick stone arches. It gives 100% total shield against radiation and winter cold!'
+      },
+      {
+        keywords: ['radiation', 'proton', 'flare', 'cosmic', 'shield'],
+        reply: 'Space radiation from the Sun is blocked by water tanks and thick Mars dirt walls! Hydrogen in water and soil stops fast cosmic particles.'
+      },
+      {
+        keywords: ['oxygen', 'air', 'breathe', 'eclss'],
+        reply: 'Mars air is toxic CO2, but our ECLSS life support recyclers filter and produce fresh oxygen so astronauts can breathe easily indoors!'
+      },
+      {
+        keywords: ['water', 'ice', 'drink'],
+        reply: 'Our base recycles 98% of crew water, and robot rovers can melt underground Martian glacier ice for fresh drinking supplies!'
+      },
+      {
+        keywords: ['money', 'budget', 'cost', 'mass', 'rocket', 'weight'],
+        reply: 'Every rocket mission has a budget and weight limit! Keep your base design within rocket payload limits so you have room for spare batteries.'
+      },
+      {
+        keywords: ['hint', 'quiz', 'help', 'stuck', 'crisis', 'answer'],
+        reply: function() {
+          if (currentCrisisQuestion) {
+            return `💡 Hint from Noyel: ${currentCrisisQuestion.hint} (You can also click "Show Answer" to learn without penalty!)`;
+          }
+          return "Everything looks steady, Cadet! Keep your battery charged during the day so your base stays warm all night!";
+        }
+      }
+    ];
+
+    function askNoyel(question) {
+      const q = question.toLowerCase().trim();
+      // Easter egg exact or fuzzy check
+      if (q.includes('how is life') || q === 'life' || q.startsWith('life')) {
+        return 'Life is like an ocean! 🌊 Vast, wondrous, and full of deep mysteries, Cadet! But on Mars, life needs a cozy warm base, clean air, and good friends! 🚀';
+      }
+      for (const item of NOYEL_KNOWLEDGE) {
+        if (item.keywords.some(k => q.includes(k))) {
+          if (typeof item.reply === 'function') return item.reply();
+          return item.reply;
+        }
+      }
+      return "Great question, Cadet! Ask me about solar panels, our battery, heaters, base designs, or ask 'How is life?'!";
+    }
+    const askNoel = askNoyel;
+
+    // =========================================================================
+    // 7. UI CONTROLLERS & EVENT LISTENERS
+    // =========================================================================
+    function showView(viewId) {
+      ['view-landing', 'view-setup', 'view-sim', 'view-report'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== viewId);
+      });
+
+      // Show Home button on header when not on landing
+      const btnHome = document.getElementById('btn-header-home');
+      if (btnHome) btnHome.classList.toggle('hidden', viewId === 'view-landing');
+
+      if (viewId === 'view-sim') {
+        resizeCanvas();
+      }
+    }
+
+    function updateSetupGauges() {
+      // Budget Gauge
+      document.getElementById('label-cfg-budget').textContent = `$${(missionConfig.budget / 1000).toFixed(2)} Billion`;
+      const bGauge = document.getElementById('gauge-budget-status');
+      const arch = ARCH_TYPES[missionConfig.selectedArch];
+      if (missionConfig.budget < arch.cost) {
+        bGauge.className = 'px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between font-bold';
+        bGauge.innerHTML = `<span>Cost exceeds budget! ($${arch.cost}M required)</span><span>🔴 DEFICIT</span>`;
+      } else {
+        bGauge.className = 'px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between font-bold';
+        bGauge.innerHTML = `<span>Budget reserve: +$${missionConfig.budget - arch.cost}M</span><span>🟢 SAFE</span>`;
+      }
+
+      // Mass Gauge
+      document.getElementById('label-cfg-mass').textContent = `${missionConfig.massLimit.toFixed(1)} Tons`;
+      const mGauge = document.getElementById('gauge-mass-status');
+      if (missionConfig.massLimit < arch.mass) {
+        mGauge.className = 'px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between font-bold';
+        mGauge.innerHTML = `<span>Base too heavy for rocket! (${arch.mass} Tons)</span><span>🔴 OVERWEIGHT</span>`;
+      } else {
+        mGauge.className = 'px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between font-bold';
+        mGauge.innerHTML = `<span>Cargo space margin: +${missionConfig.massLimit - arch.mass} Tons</span><span>🟢 SAFE</span>`;
+      }
+    }
+
+    function updateArchCardStyles() {
+      document.querySelectorAll('.setup-arch-card').forEach(card => {
+        const aId = card.dataset.arch;
+        const b = card.querySelector('.btn-pick-arch');
+        if (aId === missionConfig.selectedArch) {
+          card.className = 'setup-arch-card p-5 rounded-3xl bg-cosmic-900 border-2 border-sky-400 shadow-xl shadow-sky-500/15 transition-all cursor-pointer flex flex-col justify-between space-y-4';
+          if (b) {
+            b.className = 'btn-pick-arch w-full py-2.5 rounded-2xl bg-sky-600 text-white font-bold text-xs font-display shadow';
+            b.textContent = '✓ Selected Base';
+          }
+        } else {
+          card.className = 'setup-arch-card p-5 rounded-3xl bg-cosmic-900 border-2 border-slate-800 hover:border-sky-400/50 transition-all cursor-pointer flex flex-col justify-between space-y-4 shadow-md';
+          if (b) {
+            b.className = 'btn-pick-arch w-full py-2.5 rounded-2xl bg-slate-800 hover:bg-sky-600 text-white font-bold text-xs font-display transition-colors';
+            b.textContent = `Select ${ARCH_TYPES[aId].name}`;
+          }
+        }
+      });
+      updateSetupGauges();
+    }
+
+    function updateSimHUD() {
+      const solStr = String(sim.sol).padStart(2, '0');
+      const hourStr = String(Math.floor(sim.hour)).padStart(2, '0');
+      const minStr = Math.floor((sim.hour % 1) * 60) === 0 ? '00' : '30';
+
+      document.getElementById('sim-hud-sol').textContent = `SOL ${solStr} / ${missionConfig.targetSols}`;
+      document.getElementById('sim-hud-lmst').textContent = `${hourStr}:${minStr} LMST`;
+
+      const isDay = sim.hour >= 5.0 && sim.hour < 20.0;
+      document.getElementById('sim-hud-day-icon').textContent = isDay ? '☀️' : '🌙';
+
+      // Badges
+      document.getElementById('val-dome-temp').textContent = `${sim.habTemp >= 0 ? '+' : ''}${sim.habTemp.toFixed(1)}°C`;
+      document.getElementById('val-battery').textContent = `${Math.round(sim.battery)} / ${sim.batteryMax} kWh`;
+      document.getElementById('val-health').textContent = `${Math.round(sim.crewHealth)}% HEALTH`;
+
+      // On-canvas overlays
+      const arch = ARCH_TYPES[missionConfig.selectedArch];
+      document.getElementById('sim-viewport-arch').textContent = arch.name.toUpperCase();
+      document.getElementById('sim-viewport-ambient').textContent = `${sim.ambientTemp.toFixed(1)}°C`;
+      document.getElementById('sim-viewport-solar').textContent = `${sim.pSolar.toFixed(1)} kW (${isDay ? 'Day' : 'Night'})`;
+    }
+
+    function initEvents() {
+      // 1. Navigation Flow
+      document.getElementById('btn-start-play').addEventListener('click', () => {
+        sound.playClick();
+        sound.playMusic();
+        showView('view-setup');
+      });
+
+      document.getElementById('btn-back-landing').addEventListener('click', () => {
+        sound.playClick();
+        showView('view-landing');
+      });
+
+      document.getElementById('btn-header-home').addEventListener('click', () => {
+        sound.playClick();
+        sim.active = false;
+        if (simTickTimer) clearInterval(simTickTimer);
+        if (realSecondsInterval) clearInterval(realSecondsInterval);
+        showView('view-landing');
+      });
+
+      document.getElementById('btn-report-restart').addEventListener('click', () => {
+        sound.playClick();
+        sim.active = false;
+        if (simTickTimer) clearInterval(simTickTimer);
+        if (realSecondsInterval) clearInterval(realSecondsInterval);
+        showView('view-landing');
+      });
+
+      // 2. Setup Sliders
+      document.getElementById('slider-cfg-budget').addEventListener('input', (e) => {
+        missionConfig.budget = parseFloat(e.target.value);
+        updateSetupGauges();
+      });
+
+      document.getElementById('slider-cfg-mass').addEventListener('input', (e) => {
+        missionConfig.massLimit = parseFloat(e.target.value);
+        updateSetupGauges();
+      });
+
+      // Architecture Cards Click
+      document.querySelectorAll('.setup-arch-card').forEach(card => {
+        card.addEventListener('click', () => {
+          sound.playClick();
+          missionConfig.selectedArch = card.dataset.arch;
+          updateArchCardStyles();
+        });
+      });
+
+      // Launch Simulation Room
+      document.getElementById('btn-launch-simulation').addEventListener('click', () => {
+        sound.playClick();
+        // Reset simulation state
+        sim.sol = 1;
+        sim.hour = 10.0;
+        sim.speed = 0.5;
+        sim.isPaused = false;
+        sim.active = true;
+        sim.battery = 300.0;
+        sim.crewHealth = 100.0;
+        sim.habTemp = 20.0;
+        sim.activeCrisis = null;
+        quizzesAttempted = 0;
+        quizzesCorrect = 0;
+        sim.quizzesAttempted = 0;
+        sim.quizzesCorrect = 0;
+        sim.quizzesSolved = 0;
+        sim.quizzesTotal = 0;
+        sim.maxQuizzes = 3; // Strict cap of 3 quizzes per mission
+        sim.activeSeconds = 0;
+        sim.nextQuizAllowedSecond = 35; // 30s-45s initial delay before 1st question
+        sim.cooldownIntervalSeconds = 35; // 30s-45s buffer period between questions
+        sim.pausedByNoyel = false;
+        sim.isFastForwarded = false;
+        sim.askedQuestionsIndices = [];
+
+        document.getElementById('slider-sim-speed').value = 0.5;
+        document.getElementById('label-sim-speed').textContent = '0.5 Sol/s (Relaxed)';
+
+        setSimPauseState(false);
+        showView('view-sim');
+        updateSimHUD();
+        startSimLoop();
+        startRealSecondsTracker();
+      });
+
+      // 3. Simulation Controls
+      // Speed Slider (Smooth horizontal control: 0.2 to 2.0 Sols/sec)
+      const speedSlider = document.getElementById('slider-sim-speed');
+      speedSlider.addEventListener('input', (e) => {
+        sim.speed = parseFloat(e.target.value);
+        document.getElementById('label-sim-speed').textContent = `${sim.speed.toFixed(1)} Sol/s${sim.speed === 0.5 ? ' (Relaxed)' : ''}`;
+        if (sim.active && !sim.isPaused) {
+          startSimLoop();
+        }
+      });
+
+      // Dedicated Pause/Resume button
+      document.getElementById('btn-toggle-pause').addEventListener('click', () => {
+        sound.playClick();
+        setSimPauseState(!sim.isPaused);
+      });
+
+      // Run Live Simulation
+      document.getElementById('btn-run-live').addEventListener('click', () => {
+        sound.playClick();
+        setSimPauseState(false);
+      });
+
+      // Instant Fast-Forward
+      document.getElementById('btn-fast-forward').addEventListener('click', () => {
+        runFastForward();
+      });
+
+      // 4. Disaster Quiz Resume & In-Quiz Noyel Assistant
+      document.getElementById('btn-quiz-resume').addEventListener('click', () => {
+        sound.playClick();
+        stopQuizTimer();
+        document.getElementById('modal-disaster-quiz').classList.add('hidden');
+        sim.activeCrisis = null;
+        sim.nextQuizAllowedSecond = sim.activeSeconds + sim.cooldownIntervalSeconds;
+        setSimPauseState(false);
+      });
+
+      const btnQuizNoelHint = document.getElementById('btn-quiz-noel-hint');
+      if (btnQuizNoelHint) {
+        btnQuizNoelHint.addEventListener('click', () => {
+          sound.playClick();
+          if (currentCrisisQuestion) {
+            document.getElementById('quiz-noel-hint-text').textContent = `💡 Hint from Helper Noyel: ${currentCrisisQuestion.hint}`;
+          }
+        });
+      }
+
+      const btnQuizScience = document.getElementById('btn-quiz-explain-science');
+      if (btnQuizScience) {
+        btnQuizScience.addEventListener('click', () => {
+          sound.playClick();
+          if (currentCrisisQuestion) {
+            document.getElementById('quiz-noel-hint-text').textContent = `🔬 Science Fact: ${currentCrisisQuestion.science}`;
+          }
+        });
+      }
+
+      const btnQuizShowAnswer = document.getElementById('btn-quiz-show-answer');
+      if (btnQuizShowAnswer) {
+        btnQuizShowAnswer.addEventListener('click', () => {
+          handleShowAnswer();
+        });
+      }
+
+      // 5. Embedded Helper Noyel Quiz Chat Assistant & Easter Egg Handler
+      const quizNoyelForm = document.getElementById('quiz-noyel-chat-form');
+      if (quizNoyelForm) {
+        quizNoyelForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const input = document.getElementById('quiz-noyel-input');
+          const text = input ? input.value.trim() : '';
+          if (!text) return;
+          try { sound.playClick(); } catch(err) {}
+          input.value = '';
+          const reply = askNoyel(text);
+          const hintBox = document.getElementById('quiz-noel-hint-text');
+          if (hintBox) {
+            hintBox.textContent = `🤖 Noyel says: ${reply}`;
+          }
+        });
+      }
+
+      // 6. Audio Settings Modal
+      const modalSettings = document.getElementById('modal-settings');
+      const openSettings = () => { sound.playClick(); modalSettings.classList.remove('hidden'); };
+      const closeSettings = () => { sound.playClick(); modalSettings.classList.add('hidden'); };
+
+      document.getElementById('btn-open-settings').addEventListener('click', openSettings);
+      document.getElementById('btn-landing-settings').addEventListener('click', openSettings);
+      document.getElementById('btn-close-settings').addEventListener('click', closeSettings);
+      document.getElementById('btn-save-settings').addEventListener('click', closeSettings);
+
+      document.getElementById('btn-toggle-master-sound').addEventListener('click', () => {
+        sound.playClick();
+        sound.masterEnabled = !sound.masterEnabled;
+        const b = document.getElementById('btn-toggle-master-sound');
+        b.textContent = sound.masterEnabled ? 'ON' : 'OFF';
+        b.className = `px-3.5 py-1.5 rounded-xl font-bold cursor-pointer text-xs ${sound.masterEnabled ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-400'}`;
+        if (!sound.masterEnabled) sound.stopMusic();
+        else sound.playMusic();
+      });
+
+      document.getElementById('slider-music-vol').addEventListener('input', (e) => {
+        sound.musicVolume = parseFloat(e.target.value) / 100;
+        if (sound.musicAudio) sound.musicAudio.volume = sound.musicVolume;
+        document.getElementById('label-music-vol').textContent = `${e.target.value}%`;
+      });
+
+      document.getElementById('slider-sfx-vol').addEventListener('input', (e) => {
+        sound.sfxVolume = parseFloat(e.target.value) / 100;
+        document.getElementById('label-sfx-vol').textContent = `${e.target.value}%`;
+      });
+    }
+
+    // =========================================================================
+    // 8. BOOTSTRAP APPLICATION
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      canvas = document.getElementById('sim-canvas');
+      if (canvas) ctx = canvas.getContext('2d');
+
+      window.addEventListener('resize', resizeCanvas);
+
+      initEvents();
+      updateSetupGauges();
+      updateArchCardStyles();
+      showView('view-landing');
+      renderCanvas();
+    });
+  </script>
+</body>
+</html>
